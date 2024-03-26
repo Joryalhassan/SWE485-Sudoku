@@ -45,41 +45,53 @@ public class SUDOKU {
     }
 
     // Method to solve the Sudoku using backtracking with MRV heuristic
-    public static int[][] solveSudoku(int[][] grid) {
-        if (isFilled(grid)) {
-            return grid;  // Puzzle solved
-        }
-
-        // Find the next empty cell with the fewest remaining values (MRV heuristic)
-        int[] cell = getNextEmptyCellWithMRV(grid);
-
-        // Get possible values for the empty cell
-        List<Integer> values = possibleValues(grid, cell);
-
-        // Shuffle the values to break ties randomly
-        Collections.shuffle(values);
-
-        // Iterate through possible values for the empty cell
-        for (int value : values) {
-            // Assign the value to the cell
-            grid[cell[0]][cell[1]] = value;
-
-            // Check constraints
-            if (checkConstraints(grid, cell) && isValidAssignment(grid, cell)) {
-                // Recursively solve the Sudoku
-                int[][] solution = solveSudoku(grid);
-                if (solution != null) {
-                    return solution;
-                }
-            }
-
-            // Undo the assignment
-            grid[cell[0]][cell[1]] = EMPTY;
-        }
-
-        // If no solution found
-        return null;
+public static int[][] solveSudoku(int[][] grid) {
+    if (isFilled(grid)) {
+        return grid;  // Puzzle solved
     }
+
+    // Find the next empty cell with the fewest remaining values (MRV heuristic)
+    int[] cell = getNextEmptyCellWithMRV(grid);
+
+    // Get possible values for the empty cell
+    List<Integer> values = possibleValues(grid, cell);
+
+    // Shuffle the values to break ties randomly
+    Collections.shuffle(values);
+
+    // Iterate through possible values for the empty cell
+    for (int value : values) {
+        // Assign the value to the cell
+        if (assignValue(grid, cell, value)) { // Assign and print inside assignValue method
+            // Recursively solve the Sudoku
+            int[][] solution = solveSudoku(grid);
+            if (solution != null) {
+                return solution;
+            }
+        }
+
+        // Undo the assignment
+        grid[cell[0]][cell[1]] = EMPTY;
+    }
+
+    // If no solution found
+    return null;
+}
+
+// Method to assign a value to a cell and print the grid
+private static boolean assignValue(int[][] grid, int[] cell, int value) {
+    grid[cell[0]][cell[1]] = value;
+    if (checkConstraints(grid, cell) && isValidAssignment(grid, cell)) {
+        System.out.println("Assigning value " + value + " to cell [" + cell[0] + ", " + cell[1] + "]");
+        printGrid(grid); // Print the grid after each assignment
+        System.out.println(); // Add an empty line for better readability
+        return true;
+    } else {
+        grid[cell[0]][cell[1]] = EMPTY; // Undo assignment if not valid
+        return false;
+    }
+}
+
 
  // Method to check if an assignment is valid
     private static boolean isValidAssignment(int[][] grid, int[] cell) {
