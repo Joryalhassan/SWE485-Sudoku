@@ -1,287 +1,163 @@
 package topic;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public class SUDOKU {
-    private static final int EMPTY = 0; // Constant representing an empty cell
-    private static int[][] grid; // Sudoku grid
-    private static long startTime; // Variable to store the start time
+    private static final int EMPTY = 0; // Empty cell marker
+    private static int[][] grid; // The Sudoku grid
+    private static long startTime; // Start time for measuring execution duration
 
     public static void main(String[] args) {
-        // Define the Sudoku grid (0 represents empty cells)
-        grid = new int[][]{
-            {5, 3, 0, 0, 7, 0, 0, 0, 0},
-            {6, 0, 0, 1, 9, 5, 0, 0, 0},
-            {0, 9, 8, 0, 0, 0, 0, 6, 0},
-            {8, 0, 0, 0, 6, 0, 0, 0, 3},
-            {4, 0, 0, 8, 0, 3, 0, 0, 1},
-            {7, 0, 0, 0, 2, 0, 0, 0, 6},
-            {0, 6, 0, 0, 0, 0, 2, 8, 0},
-            {0, 0, 0, 4, 1, 9, 0, 0, 5},
-            {0, 0, 0, 0, 8, 0, 0, 7, 9}
-        };
+        // Generate a semi-random starting grid
+        grid = generateRandomSudokuStart(20); // Adjust the number of filled cells as needed
 
-        // Start the timer
+        // Start solving timer
         startTime = System.nanoTime();
 
         // Solve the Sudoku
-        int[][] solution = solveSudoku(grid);
-
-        // End time
-        long endTime = System.nanoTime();
-        long duration = (endTime - startTime) / 1000000; // Convert to milliseconds
-
-        // Print the solution and computational time
-        if (solution != null) {
+        if (solveSudoku(grid)) {
+            long endTime = System.nanoTime();
+            long duration = (endTime - startTime) / 1_000_000; // Duration in milliseconds
             System.out.println("Sudoku Solved Successfully:");
-            printGrid(solution);
-            int violations = calculateConstraintViolations(solution);
-            System.out.println("Total Constraint Violations: " + violations);
+            printGrid(grid);
             System.out.println("Computational Time: " + duration + " milliseconds");
         } else {
             System.out.println("No solution found for the Sudoku.");
         }
     }
 
-    // Method to solve the Sudoku using backtracking with MRV heuristic
-public static int[][] solveSudoku(int[][] grid) {
-    if (isFilled(grid)) {
-        return grid;  // Puzzle solved
+    // Solve the Sudoku using backtracking and MRV heuristic
+public static boolean solveSudoku(int[][] grid) {
+    int[] cell = findUnassignedLocation(grid);
+    if (cell == null) {
+        return true; // Puzzle solved
     }
-
-    // Find the next empty cell with the fewest remaining values (MRV heuristic)
-    int[] cell = getNextEmptyCellWithMRV(grid);
-
-    // Get possible values for the empty cell
-    List<Integer> values = possibleValues(grid, cell);
-
-    // Shuffle the values to break ties randomly
-    Collections.shuffle(values);
-
-    // Iterate through possible values for the empty cell
-    for (int value : values) {
-        // Assign the value to the cell
-        if (assignValue(grid, cell, value)) { // Assign and print inside assignValue method
-            // Recursively solve the Sudoku
-            int[][] solution = solveSudoku(grid);
-            if (solution != null) {
-                return solution;
+    int row = cell[0], col = cell[1];
+    List<Integer> values = getPossibleValues(grid, row, col);
+    for (Integer value : values) {
+        if (isSafe(grid, row, col, value)) {
+            grid[row][col] = value;
+            System.out.println("Assigning value " + value + " to cell [" + row + ", " + col + "]");
+            printGrid(grid); // Print the grid after each assignment
+            System.out.println("-------------------------------------------");
+            if (solveSudoku(grid)) {
+                return true;
             }
+            grid[row][col] = EMPTY; // Undo & try again
         }
-
-        // Undo the assignment
-        grid[cell[0]][cell[1]] = EMPTY;
     }
-
-    // If no solution found
-    return null;
+    return false; // Trigger backtracking
 }
 
-// Method to assign a value to a cell and print the grid
-private static boolean assignValue(int[][] grid, int[] cell, int value) {
-    grid[cell[0]][cell[1]] = value;
-    if (checkConstraints(grid, cell) && isValidAssignment(grid, cell)) {
-        System.out.println("Assigning value " + value + " to cell [" + cell[0] + ", " + cell[1] + "]");
-        printGrid(grid); // Print the grid after each assignment
-        System.out.println(); // Add an empty line for better readability
-        return true;
-    } else {
-        grid[cell[0]][cell[1]] = EMPTY; // Undo assignment if not valid
+
+    // Find the first unassigned location (with MRV heuristic could be enhanced here)
+    private static int[] findUnassignedLocation(int[][] grid) {
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                if (grid[row][col] == EMPTY) {
+                    return new int[]{row, col};
+                }
+            }
+        }
+        return null; // No unassigned location found
+    }
+
+    // Checks whether it will be legal to assign num to the given row, col
+    private static boolean isSafe(int[][] grid, int row, int col, int num) {
+        return !usedInRow(grid, row, num) && !usedInCol(grid, col, num) && !usedInBox(grid, row - row % 3, col - col % 3, num);
+    }
+
+    // Check if num is not in the current row
+    private static boolean usedInRow(int[][] grid, int row, int num) {
+        for (int col = 0; col < 9; col++) {
+            if (grid[row][col] == num) {
+                return true;
+            }
+        }
         return false;
     }
-}
 
-
- // Method to check if an assignment is valid
-    private static boolean isValidAssignment(int[][] grid, int[] cell) {
-        int row = cell[0];
-        int col = cell[1];
-        int value = grid[row][col];
-
-        // Check row constraints
-        for (int j = 0; j < 9; j++) {
-            if (j != col && grid[row][j] == value) {
-                return false;
+    // Check if num is not in the current column
+    private static boolean usedInCol(int[][] grid, int col, int num) {
+        for (int row = 0; row < 9; row++) {
+            if (grid[row][col] == num) {
+                return true;
             }
         }
+        return false;
+    }
+ // Check if num is not in the current 3x3 box
+    private static boolean usedInBox(int[][] grid, int boxStartRow, int boxStartCol, int num) {
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                if (grid[row + boxStartRow][col + boxStartCol] == num) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-        // Check column constraints
+    // Generate a list of possible values for a cell
+    private static List<Integer> getPossibleValues(int[][] grid, int row, int col) {
+        boolean[] possible = new boolean[9];
         for (int i = 0; i < 9; i++) {
-            if (i != row && grid[i][col] == value) {
-                return false;
-            }
+            possible[i] = true;
         }
 
-        // Check 3x3 box constraints
-        int boxStartRow = row - row % 3;
-        int boxStartCol = col - col % 3;
-        for (int i = boxStartRow; i < boxStartRow + 3; i++) {
-            for (int j = boxStartCol; j < boxStartCol + 3; j++) {
-                if (i != row && j != col && grid[i][j] == value) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    // Method to check if the Sudoku grid is completely filled
-    private static boolean isFilled(int[][] grid) {
-        for (int[] row : grid) {
-            for (int cell : row) {
-                if (cell == EMPTY) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    // Method to find the next empty cell with the fewest remaining values (MRV heuristic)
-    private static int[] getNextEmptyCellWithMRV(int[][] grid) {
-        int minRemainingValues = Integer.MAX_VALUE;
-        int[] selectedCell = null;
-
-        // Iterate through each cell in the grid
+        // Eliminate numbers based on the current row, column, and 3x3 box
         for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                if (grid[i][j] == EMPTY) {
-                    // Count remaining values for the empty cell
-                    int remainingValues = countRemainingValues(grid, i, j);
-                    // Update the cell with the fewest remaining values
-                    if (remainingValues < minRemainingValues) {
-                        minRemainingValues = remainingValues;
-                        selectedCell = new int[]{i, j};
-                    }
-                }
+            if (grid[row][i] != EMPTY) {
+                possible[grid[row][i] - 1] = false;
             }
-        }
-        return selectedCell;
-    }
-
-    // Method to count the number of remaining values for an empty cell
-    private static int countRemainingValues(int[][] grid, int row, int col) {
-        int count = 0;
-        for (int value = 1; value <= 9; value++) {
-            if (isValidAssignment(grid, new int[]{row, col}, value)) {
-                count++;
+            if (grid[i][col] != EMPTY) {
+                possible[grid[i][col] - 1] = false;
             }
-        }
-        return count;
-    }
-
-    // Method to get possible values for an empty cell
-    private static List<Integer> possibleValues(int[][] grid, int[] cell) {
-        List<Integer> values = new ArrayList<>();
-        for (int value = 1; value <= 9; value++) {
-            if (isValidAssignment(grid, cell, value)) {
-                values.add(value);
-            }
-        }
-        return values;
-    }
-
-    // Method to check constraints
-    private static boolean checkConstraints(int[][] grid, int[] cell) {
-        int row = cell[0];
-        int col = cell[1];
-        int value = grid[row][col];
-
-        // Check row constraints
-        for (int j = 0; j < 9; j++) {
-            if (j != col && grid[row][j] == value) {
-                return false;
+            int boxRow = row - row % 3 + i / 3;
+            int boxCol = col - col % 3 + i % 3;
+            if (grid[boxRow][boxCol] != EMPTY) {
+                possible[grid[boxRow][boxCol] - 1] = false;
             }
         }
 
-        // Check column constraints
+        // Compile the list of valid numbers
+        List<Integer> validNumbers = new ArrayList<>();
         for (int i = 0; i < 9; i++) {
-            if (i != row && grid[i][col] == value) {
-                return false;
+            if (possible[i]) {
+                validNumbers.add(i + 1);
             }
         }
+        return validNumbers;
+    }
 
-        // Check 3x3 box constraints
-        int boxStartRow = row - row % 3;
-        int boxStartCol = col - col % 3;
-        for (int i = boxStartRow; i < boxStartRow + 3; i++) {
-            for (int j = boxStartCol; j < boxStartCol + 3; j++) {
-                if (i != row && j != col && grid[i][j] == value) {
-                    return false;
+    // Generate a semi-random starting grid
+    private static int[][] generateRandomSudokuStart(int fillCells) {
+        int[][] newGrid = new int[9][9];
+        Random rand = new Random();
+        while (fillCells > 0) {
+            int row = rand.nextInt(9);
+            int col = rand.nextInt(9);
+            if (newGrid[row][col] == EMPTY) {
+                List<Integer> nums = getPossibleValues(newGrid, row, col);
+                if (!nums.isEmpty()) {
+                    int num = nums.get(rand.nextInt(nums.size()));
+                    newGrid[row][col] = num;
+                    fillCells--;
                 }
             }
         }
-
-        return true;
+        return newGrid;
     }
 
-    // Method to check if an assignment is valid
-    private static boolean isValidAssignment(int[][] grid, int[] cell, int value) {
-        int row = cell[0];
-        int col = cell[1];
-
-        // Check constraints
-        grid[row][col] = value;
-        boolean isValid = checkConstraints(grid, cell);
-        grid[row][col] = EMPTY; // Undo assignment
-        return isValid;
-    }
-
-    // Method to calculate the number of constraint violations
-    private static int calculateConstraintViolations(int[][] grid) {
-        int violations = 0;
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                if (grid[i][j] != EMPTY) {
-                    violations += countCellViolations(grid, i, j);
-                }
-            }
-        }
-        return violations;
-    }
-
-    // Method to count constraint violations for a cell
-    private static int countCellViolations(int[][] grid, int row, int col) {
-        int value = grid[row][col];
-        int violations = 0;
-
-        // Check row constraints
-        for (int j = 0; j < 9; j++) {
-            if (j != col && grid[row][j] == value) {
-                violations++;
-            }
-        }
-
-        // Check column constraints
-        for (int i = 0; i < 9; i++) {
-            if (i != row && grid[i][col] == value) {
-                violations++;
-            }
-        }
-
-        // Check 3x3 box constraints
-        int boxStartRow = row - row % 3;
-        int boxStartCol = col - col % 3;
-        for (int i = boxStartRow; i < boxStartRow + 3; i++) {
-            for (int j = boxStartCol; j < boxStartCol + 3; j++) {
-                if (i != row && j != col && grid[i][j] == value) {
-                    violations++;
-                }
-            }
-        }
-
-        return violations;
-    }
-
-    // Method to print the Sudoku grid
+    // Print the Sudoku grid
     private static void printGrid(int[][] grid) {
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                System.out.print(grid[i][j] + " ");
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                System.out.print(grid[row][col] + " ");
             }
             System.out.println();
         }
     }
 }
+
