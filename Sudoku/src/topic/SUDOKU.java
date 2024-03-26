@@ -10,7 +10,7 @@ public class SUDOKU {
 
     public static void main(String[] args) {
         // Generate a semi-random starting grid
-        grid = generateRandomSudokuStart(20); // Adjust the number of filled cells as needed
+        grid = generateRandomSudokuStart(20); // we can Adjust the number of pre-filled cells as needed
 
         // Start solving timer
         startTime = System.nanoTime();
@@ -68,7 +68,7 @@ public static boolean solveSudoku(int[][] grid) {
         return !usedInRow(grid, row, num) && !usedInCol(grid, col, num) && !usedInBox(grid, row - row % 3, col - col % 3, num);
     }
 
-    // Check if num is not in the current row
+    // Check if num is not in the current row -C1-
     private static boolean usedInRow(int[][] grid, int row, int num) {
         for (int col = 0; col < 9; col++) {
             if (grid[row][col] == num) {
@@ -78,7 +78,7 @@ public static boolean solveSudoku(int[][] grid) {
         return false;
     }
 
-    // Check if num is not in the current column
+    // Check if num is not in the current column -C2-
     private static boolean usedInCol(int[][] grid, int col, int num) {
         for (int row = 0; row < 9; row++) {
             if (grid[row][col] == num) {
@@ -87,7 +87,7 @@ public static boolean solveSudoku(int[][] grid) {
         }
         return false;
     }
- // Check if num is not in the current 3x3 box
+ // Check if num is not in the current 3x3 box -C3-
     private static boolean usedInBox(int[][] grid, int boxStartRow, int boxStartCol, int num) {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
