@@ -133,6 +133,7 @@ private static int[] findUnassignedLocation(int[][] grid) {
     }
 
     // Check if num is not in the current row -C1-
+    // Check if num is not in the current row -C1-
     private static boolean usedInRow(int[][] grid, int row, int num) {
         for (int col = 0; col < 9; col++) {
             if (grid[row][col] == num) {
@@ -143,6 +144,7 @@ private static int[] findUnassignedLocation(int[][] grid) {
     }
 
     // Check if num is not in the current column -C2-
+    // Check if num is not in the current column -C2-
     private static boolean usedInCol(int[][] grid, int col, int num) {
         for (int row = 0; row < 9; row++) {
             if (grid[row][col] == num) {
@@ -151,6 +153,7 @@ private static int[] findUnassignedLocation(int[][] grid) {
         }
         return false;
     }
+ // Check if num is not in the current 3x3 box -C3-
  // Check if num is not in the current 3x3 box -C3-
     private static boolean usedInBox(int[][] grid, int boxStartRow, int boxStartCol, int num) {
         for (int row = 0; row < 3; row++) {
