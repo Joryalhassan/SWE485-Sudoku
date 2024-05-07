@@ -1,5 +1,4 @@
 package topic;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -73,6 +72,9 @@ public class SudokuSolver {
                 }
             }
 
+            // Perform swapping operation
+            performSophisticatedSwap(grid);
+
             // Decrease temperature after every cooling
             temperature *= (1 - coolingRate);
             System.out.println("Temperature decreased to " + temperature);
@@ -87,6 +89,65 @@ public class SudokuSolver {
         }
 
         return false; // Failed to solve the Sudoku
+    }
+
+    private static void performSophisticatedSwap(int[][] grid) {
+        Random random = new Random();
+        int choice = random.nextInt(3);
+
+        switch (choice) {
+            case 0:
+                shuffleRows(grid);
+                break;
+            case 1:
+                shuffleColumns(grid);
+                break;
+            case 2:
+                shuffleSubgrids(grid);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static void shuffleRows(int[][] grid) {
+        Random random = new Random();
+        int row1 = random.nextInt(9);
+        int row2 = random.nextInt(9);
+
+        for (int col = 0; col < 9; col++) {
+            int temp = grid[row1][col];
+            grid[row1][col] = grid[row2][col];
+            grid[row2][col] = temp;
+        }
+    }
+
+    private static void shuffleColumns(int[][] grid) {
+        Random random = new Random();
+        int col1 = random.nextInt(9);
+        int col2 = random.nextInt(9);
+
+        for (int row = 0; row < 9; row++) {
+            int temp = grid[row][col1];
+            grid[row][col1] = grid[row][col2];
+            grid[row][col2] = temp;
+        }
+    }
+
+    private static void shuffleSubgrids(int[][] grid) {
+        Random random = new Random();
+        int rowStart1 = random.nextInt(3) * 3;
+        int colStart1 = random.nextInt(3) * 3;
+        int rowStart2 = random.nextInt(3) * 3;
+        int colStart2 = random.nextInt(3) * 3;
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                int temp = grid[rowStart1 + i][colStart1 + j];
+                grid[rowStart1 + i][colStart1 + j] = grid[rowStart2 + i][colStart2 + j];
+                grid[rowStart2 + i][colStart2 + j] = temp;
+            }
+        }
     }
 
     private static boolean isSolved(int[][] grid) {
