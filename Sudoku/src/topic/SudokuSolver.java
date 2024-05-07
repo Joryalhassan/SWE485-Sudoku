@@ -8,32 +8,44 @@ public class SudokuSolver {
     private static final int EMPTY = 0;
     private static int[][] grid;
     private static long startTime;
-    private static int maxIterations = 40;
+    private static int maxIterations = 100;
+    private static double initialTemperature = 1.0;
+    private static double coolingRate = 0.0005;
+    private static int resetThreshold = 1000;
 
     public static void main(String[] args) {
-        grid = generateRandomSudokuStart(30); // Adjust the number of pre-filled cells as needed
-        System.out.println("Initial Sudoku Grid:");
-        printGrid(grid);
-        System.out.println("-------------------------------------------");
-        startTime = System.nanoTime();
-
-        // Solve Sudoku using simulated annealing
-        if (solveSudoku(grid)) {
-            long endTime = System.nanoTime();
-            long duration = (endTime - startTime) / 1_000_000;
-            System.out.println("Sudoku Solved Successfully:");
+        boolean solutionFound = false;
+        int resetCount = 0;
+        while (!solutionFound && resetCount < resetThreshold) {
+            grid = generateRandomSudokuStart(30); // Adjust the number of pre-filled cells as needed
+            System.out.println("Initial Sudoku Grid:");
             printGrid(grid);
-            System.out.println("Computational Time: " + duration + " milliseconds");
-            int violations = calculateConstraintViolations(grid);
-            System.out.println("Total Constraint Violations: " + violations);
-        } else {
-            System.out.println("Termination condition: No solution found for the Sudoku.");
+            System.out.println("-------------------------------------------");
+            startTime = System.nanoTime();
+
+            // Solve Sudoku using simulated annealing
+            if (solveSudoku(grid)) {
+                long endTime = System.nanoTime();
+                long duration = (endTime - startTime) / 1_000_000;
+                System.out.println("Sudoku Solved Successfully:");
+                printGrid(grid);
+                System.out.println("Computational Time: " + duration + " milliseconds");
+                int violations = calculateConstraintViolations(grid);
+                System.out.println("Total Constraint Violations: " + violations);
+                solutionFound = true;
+            } else {
+                System.out.println("Termination condition: No solution found for the Sudoku.");
+                resetCount++;
+            }
+        }
+
+        if (!solutionFound) {
+            System.out.println("Unable to find a solution after " + resetCount + " resets.");
         }
     }
 
     public static boolean solveSudoku(int[][] grid) {
-        double temperature = 1.0;
-        double coolingRate = 0.003;
+        double temperature = initialTemperature;
         int iterations = 0; // Track iterations
 
         while (temperature > 0.1 && iterations < maxIterations) {
@@ -192,9 +204,7 @@ public class SudokuSolver {
         int[][] grid = new int[9][9];
         Random random = new Random();
 
-        while (numFilledCells
-
- > 0) {
+        while (numFilledCells > 0) {
             int row = random.nextInt(9);
             int col = random.nextInt(9);
             int value = random.nextInt(9) + 1;
