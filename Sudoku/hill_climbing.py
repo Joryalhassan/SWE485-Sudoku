@@ -8,9 +8,11 @@ class Sudoku():
         self.reset()
 
     def reset(self):
+        # Initialize the Sudoku board with numbers from 1 to 9 in random order
         self.board = (np.indices((9,9)) + 1)[1]
         for i in range(len(self.board)):
             self.board[i] = np.random.permutation(self.board[i])
+        # Define fixed values for the Sudoku puzzle
         self.fixedValues = np.array([
             #(val, row, col)
             (7, 0, 3),
@@ -34,6 +36,7 @@ class Sudoku():
         self.setup()
     
     def printBoard(self, board=None):
+        # Print the Sudoku board
         if board is None:
             board = self.board
         
@@ -47,14 +50,17 @@ class Sudoku():
             print("")
 
     def swapToPlace(self, val, line, col):
+        # Swap a value to a specific position on the board
         valIndex = np.where(self.board[line]==val)[0][0]
         self.swap(self.board[line], valIndex, col)
 
     def setup(self):
+        # Setup the initial configuration of the Sudoku board
         for (val, row, col) in self.fixedValues:
             self.swapToPlace(val, row, col)
 
     def fitness(self, board=None):
+        # Calculate the fitness score of the Sudoku board (number of unique values)
         if board is None:
             board = self.board
         score = 0
@@ -70,15 +76,18 @@ class Sudoku():
         return score
 
     def swap(self, arr, pos1, pos2):
+        # Swap two elements in an array
         arr[pos1], arr[pos2] = arr[pos2], arr[pos1]
 
     def isFixed(self, row, col):
+        # Check if a position on the board corresponds to a fixed value
         for t in self.fixedValues:
             if(row == t[1] and col == t[2]):
                 return True
         return False
 
     def bestNeighbor(self):
+        # Find the best neighboring configuration of the Sudoku board
         tempBoard = self.board.copy()
         # best = (row, (col1, col2), val)
         # col1 and col2 will be swapped with the swap.
@@ -97,6 +106,7 @@ class Sudoku():
         return best
 
     def climbHill(self):
+        # Perform hill climbing algorithm to solve the Sudoku puzzle
         scores = []
         maxScore = self.fitness()
         print("Initial board:")
@@ -137,10 +147,3 @@ for i in range(10):
 print("Best score: %i" % maxScore)
 sud.printBoard(bestBoard)
 
-# Draw a graph of the performance of each hill climbing run
-for trial in trials:
-    plt.plot(trial)
-plt.title('Hill Climbing')
-plt.ylabel('Score (Max 243)')
-plt.xlabel('Iterations')
-plt.show()
