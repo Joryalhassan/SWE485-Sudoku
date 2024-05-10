@@ -1,6 +1,5 @@
 import numpy as np
 import sys
-import matplotlib.pyplot as plt
 
 class Sudoku():
 
@@ -13,28 +12,14 @@ class Sudoku():
         for i in range(len(self.board)):
             self.board[i] = np.random.permutation(self.board[i])
         # Define fixed values for the Sudoku puzzle
-        self.fixedValues = np.array([
-            #(val, row, col)
-            (7, 0, 3),
-            (1, 1, 0),
-            (4, 2, 3),
-            (3, 2, 4),
-            (2, 2, 6),
-            (6, 3, 8),
-            (5, 4, 3),
-            (9, 4, 5),
-            (4, 5, 6),
-            (1, 5, 7),
-            (8, 5, 8),
-            (8, 6, 4),
-            (1, 6, 5),
-            (2, 7, 2),
-            (5, 7, 7),
-            (4, 8, 1),
-            (3, 8, 6)
-            ])
+        self.fixedValues = []
+        for row in range(9):
+            for col in range(9):
+                if np.random.random() < 0.5:  # Probability of fixing a number
+                    value = np.random.randint(1, 10)
+                    self.fixedValues.append((value, row, col))
         self.setup()
-    
+
     def printBoard(self, board=None):
         # Print the Sudoku board
         if board is None:
@@ -146,4 +131,3 @@ for i in range(10):
     # print(finalScore)
 print("Best score: %i" % maxScore)
 sud.printBoard(bestBoard)
-
