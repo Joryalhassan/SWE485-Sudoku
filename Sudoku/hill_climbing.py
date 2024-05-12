@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import time
 
 class Sudoku():
 
@@ -97,10 +98,14 @@ class Sudoku():
         print("Initial board:")
         self.printBoard(self.board)
         print("\nInitial score:", maxScore)
+        start_time = time.time()
         while True:
             scores.append(maxScore)
             (row, (col1, col2), nextScore) = self.bestNeighbor()
             if(nextScore <= maxScore):
+                end_time = time.time()
+                elapsed_time = (end_time - start_time) * 1000  # in milliseconds
+                print(f"\nTime taken to find solution: {elapsed_time:.2f} milliseconds")
                 return scores
             self.swap(self.board[row], col1, col2)
             maxScore = nextScore
